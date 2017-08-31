@@ -2,6 +2,7 @@ package com.jasahub.recyclerview3;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -10,9 +11,10 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.jasahub.recyclerview3.model.Hotel;
+import com.jasahub.recyclerview3.model.DataHotel;
 
-public class InputActivity extends AppCompatActivity {
+public class InputActivity extends AppCompatActivity
+{
 
     static final int REQUEST_IMAGE_GET = 1;
     EditText etJudul;
@@ -21,7 +23,8 @@ public class InputActivity extends AppCompatActivity {
     EditText etLokasi;
     ImageView ivFoto;
     Uri uriFoto;
-    Hotel hotel;
+    DataHotel place;
+    boolean isNew;
 
 
     @Override
@@ -51,23 +54,28 @@ public class InputActivity extends AppCompatActivity {
             }
         });
 
-        hotel = (Hotel) getIntent().getSerializableExtra(MainActivity.HOTEL);
-        if (hotel != null) {
-            setTitle("Edit " + hotel.judul);
+        long id = getIntent().getLongExtra(MainActivity.PLACE, -1);
+        if (id != -1)
+        {
+            place = DataHotel.findById(DataHotel.class, id);
+            setTitle("Edit " + place.judul);
             fillData();
-
-        } else {
-            setTitle("New Hotel");
+            isNew = false;
+        }
+        else
+        {
+            setTitle("New Place");
+            isNew = true;
         }
 
     }
 
     private void fillData() {
-        etJudul.setText(hotel.judul);
-        etDeskripsi.setText(hotel.deskripsi);
-        etDetail.setText(hotel.detail);
-        etLokasi.setText(hotel.lokasi);
-        uriFoto = Uri.parse(hotel.foto);
+        etJudul.setText(place.judul);
+        etDeskripsi.setText(place.deskripsi);
+        etDetail.setText(place.detail);
+        etLokasi.setText(place.lokasi);
+        uriFoto = Uri.parse(place.foto);
         ivFoto.setImageURI(uriFoto);
     }
 
@@ -77,10 +85,25 @@ public class InputActivity extends AppCompatActivity {
         String detail = etDetail.getText().toString();
         String lokasi = etLokasi.getText().toString();
 
-        if (isValid(judul, deskripsi, detail, lokasi, uriFoto)) {
-            hotel = new Hotel(judul, deskripsi, detail, lokasi, uriFoto.toString());
+        if (isValid(judul, deskripsi, detail, lokasi, uriFoto))
+        {
+            if (isNew)
+            {
+                place = new DataHotel(judul, deskripsi,
+                        detail, lokasi, uriFoto.toString());
+                place.save();
+            }
+            else
+            {
+                place.judul = judul;
+                place.deskripsi = deskripsi;
+                place.detail = detail;
+                place.lokasi = lokasi;
+                place.foto = uriFoto.toString();
+                place.save();
+            }
+
             Intent intent = new Intent();
-            intent.putExtra(MainActivity.HOTEL, hotel);
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -112,13 +135,22 @@ public class InputActivity extends AppCompatActivity {
     }
 
     private void setErrorEmpty(EditText editText) {
-        editText.setError(((TextInputLayout) editText.getParent().getParent()).getHint() + "Belum Diisi");
+        editText.setError(((TextInputLayout) editText.getParent().getParent()).getHint() + " Belum Diisi");
 
     }
 
 
     private void pickPhoto() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent intent;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)
+        {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+        }
+        else
+        {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+        }
         intent.setType("image/*");
         if (intent.resolveActivity(getPackageManager()) != null)
             startActivityForResult(intent, REQUEST_IMAGE_GET);
@@ -127,7 +159,8 @@ public class InputActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_GET && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_GET && resultCode == RESULT_OK)
+        {
             uriFoto = data.getData();
             ivFoto.setImageURI(uriFoto);
         }

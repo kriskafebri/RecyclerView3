@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.jasahub.recyclerview3.model.Hotel;
+import com.jasahub.recyclerview3.model.DataHotel;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -32,23 +32,21 @@ public class DetailActivity extends AppCompatActivity {
 
 
 
-        /*script untuk menerima data yang dikirimkan tersebut pada class DetailActivity dan menampilkannya*/
-        Hotel hotel = (Hotel) getIntent().getSerializableExtra(MainActivity.HOTEL);
-        setTitle(hotel.judul);
+        DataHotel place = DataHotel.findById(DataHotel.class, getIntent().getLongExtra(MainActivity.PLACE, -1));
+        setTitle(place.judul);
         ImageView ivFoto = (ImageView) findViewById(R.id.imageFoto);
-        ivFoto.setImageURI(Uri.parse(hotel.foto));
-
+        ivFoto.setImageURI(Uri.parse(place.foto));
         TextView tvDeskripsi = (TextView) findViewById(R.id.place_detail);
-        tvDeskripsi.setText(hotel.deskripsi + "\n\n" + hotel.detail);
-
+        tvDeskripsi.setText(place.deskripsi + "\n\n" + place.detail);
         TextView tvLokasi = (TextView) findViewById(R.id.place_location);
-        tvLokasi.setText(hotel.lokasi);
+        tvLokasi.setText(place.lokasi);
 
-        /*untuk menampilkan icon/tombol navigation back (di kiri atas) dan memfungsikannya untuk kembali ke halaman sebelumnya*/
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 onBackPressed();
             }
         });
